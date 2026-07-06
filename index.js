@@ -9,7 +9,7 @@ const app = express();
 dotenv.config();
 
 app.use(cors({
-    origin: "http://localhost:5173"
+    origin: process.env.CLIENT_URL
 }));
 app.use(express.json());
 
@@ -28,12 +28,11 @@ app.get("/tasks", async (req, res) => {
 
 
 app.post("/tasks", async (req, res) =>{
-    const {name} = req.body;
-    console.log(name)
+    const {name, description} = req.body;
 
     const {data, error} = await supabase
         .from("tasks")
-        .insert({name})
+        .insert({name, description})
         .select()
     
     if(error){
@@ -45,12 +44,11 @@ app.post("/tasks", async (req, res) =>{
 
 app.patch("/tasks/:id", async(req, res) =>{
     const {id} = req.params;
-    const {name} = req.body;
-    console.log(name)
+    const {name, description} = req.body;
     
     const {data, error} = await supabase
         .from("tasks")
-        .update({name})
+        .update({name}) //тут треба зробити умову зміни даних!!
         .eq("id", Number(id))
         .select("*")
 
