@@ -44,6 +44,17 @@ export const changeTask = async(req, res) =>{
     res.json(data)
 }
 
+export const completeTask = async(req, res) =>{
+    const {id} = req.params;
+    const {finished} = req.body;
+
+    const{data, error} = await supabase
+        .from("tasks")
+        .update({finished})
+        .eq("id", Number(id))
+        .select("*")
+}
+
 export const deleteTask = async(req, res) =>{
     const {id} = req.params;
 
