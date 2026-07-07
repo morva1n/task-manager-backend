@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient.js";
+import * as tasks from '../services/tasks.services.js'
 
 export const getTasks = async (req, res) =>{
     const { data, error } = await supabase
@@ -30,10 +31,10 @@ export const createTask = async (req, res) =>{
 export const changeTask = async(req, res) =>{
     const {id} = req.params;
     const {name, description} = req.body;
-    
+    const updateTask = await tasks.checkData(name, description)
     const {data, error} = await supabase
         .from("tasks")
-        .update({name}) //тут треба зробити умову зміни даних!!
+        .update(updateTask)
         .eq("id", Number(id))
         .select("*")
 
