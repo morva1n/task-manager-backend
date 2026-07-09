@@ -54,6 +54,7 @@ export const completeTask = async(req, res) =>{
         .update({finished})
         .eq("id", Number(id))
         .select("*")
+    res.json(data)
 }
 
 export const deleteTask = async(req, res) =>{
