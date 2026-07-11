@@ -14,7 +14,7 @@ const checkUserExists = async (email) => {
     return data.length > 0;
 };
 
-export const registration = async (email, password) =>{
+export const registration = async (email, password) => {
     if(await checkUserExists(email)){
         throw new Error(`User with email "${email}" already exists.`)
     }
@@ -26,5 +26,19 @@ export const registration = async (email, password) =>{
         throw error;
     }
 
+    return data;
+}
+
+
+export const login = async (email, password) => {
+    const {data, error} = await supabase
+        .from('users').select('id, email, password').eq('email', email).single()
+    if(error){
+        throw error
+    }
+    const isPasswordValid = await bcrypt.compare(password, data.password)
+    if(!isPasswordValid){
+        throw new Error('Invalid password!')
+    }
     return data;
 }
