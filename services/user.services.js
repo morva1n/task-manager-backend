@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js"
 import bcrypt from 'bcrypt'
+import * as token from '../services/token.services.js'
 
 const checkUserExists = async (email) => {
     const { data, error } = await supabase
@@ -40,5 +41,8 @@ export const login = async (email, password) => {
     if(!isPasswordValid){
         throw new Error('Invalid password!')
     }
-    return data;
+    const tokens = await token.generateToken({id: data.id, email: data.email})
+
+    const refresh = await token.assignToken(data.id, tokens.refreshToken)
+    return refresh;
 }
