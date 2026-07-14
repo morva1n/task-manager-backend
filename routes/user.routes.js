@@ -6,5 +6,6 @@ import * as user from '../controllers/user.controllers.js'
 
 routes.post('/registration', user.registrationUser)
 routes.post('/login', user.loginUser)
+routes.post('/logout', user.logoutUser)
 
 export default routes;

@@ -1,6 +1,7 @@
 import { supabase } from "../supabaseClient.js"
 import bcrypt from 'bcrypt'
 import * as token from '../services/token.services.js'
+import cookieParser from "cookie-parser";
 
 const checkUserExists = async (email) => {
     const { data, error } = await supabase
@@ -44,5 +45,15 @@ export const login = async (email, password) => {
     const tokens = await token.generateToken({id: data.id, email: data.email})
 
     const refresh = await token.assignToken(data.id, tokens.refreshToken)
-    return refresh;
+    return tokens;
+}
+
+
+export const logout  = async (refreshToken) => {
+    const {data, error} = await supabase
+        .from("tokens").delete().select('id, refreshToken').eq('refreshToken', refreshToken).single();
+    if(error){
+        throw error
+    }
+    return data;
 }

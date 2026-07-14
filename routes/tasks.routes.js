@@ -4,7 +4,7 @@ import * as tasks from "../controllers/tasks.controllers.js"
 const router = express.Router();
 
 
-router.get("/", tasks.getTasks);
+router.get("/",  tasks.getTasks);
 router.post("/", tasks.createTask)
 router.patch("/:id", tasks.changeTask)
 router.patch("/:id/complete", tasks.completeTask)
