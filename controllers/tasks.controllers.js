@@ -31,6 +31,7 @@ export const createTask = async (req, res) =>{
 }
 
 export const changeTask = async(req, res) =>{
+    const userId = req.user.id;
     const {id} = req.params;
     const {name, description} = req.body;
     const updateTask = await tasks.checkData(name, description)
@@ -38,6 +39,7 @@ export const changeTask = async(req, res) =>{
         .from("tasks")
         .update(updateTask)
         .eq("id", Number(id))
+        .eq("userId", userId)
         .select("*")
 
     if(error){
@@ -48,6 +50,7 @@ export const changeTask = async(req, res) =>{
 }
 
 export const completeTask = async(req, res) =>{
+    const userId = req.user.id;
     const {id} = req.params;
     const {finished} = req.body;
 
@@ -55,17 +58,20 @@ export const completeTask = async(req, res) =>{
         .from("tasks")
         .update({finished})
         .eq("id", Number(id))
+        .eq("userId", userId)
         .select("*")
     res.json(data)
 }
 
 export const deleteTask = async(req, res) =>{
+    const userId = req.user.id;
     const {id} = req.params;
 
     const{data, error} = await supabase
         .from("tasks")
         .delete()
         .eq("id", Number(id))
+        .eq("userId", userId)
         .select("*")
     
     if(error){
