@@ -2,10 +2,11 @@ import { supabase } from "../supabaseClient.js";
 import * as tasks from '../services/tasks.services.js'
 
 export const getTasks = async (req, res) =>{
+    const userId = req.user.id;
     const { data, error } = await supabase
         .from("tasks")
-        .select("*");
-
+        .select("*")
+        .eq('userId', userId);
     if (error) {
         return res.status(500).json(error);
     }
@@ -14,11 +15,12 @@ export const getTasks = async (req, res) =>{
 }
 
 export const createTask = async (req, res) =>{
+    const userId = req.user.id;
     const {name, description} = req.body;
 
     const {data, error} = await supabase
         .from("tasks")
-        .insert({name, description})
+        .insert({name, description, userId})
         .select()
     
     if(error){

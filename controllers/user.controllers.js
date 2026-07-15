@@ -3,9 +3,9 @@ import * as user from '../services/user.services.js'
 import cookieParser from "cookie-parser";
 
 export const registrationUser = async (req, res, next) =>{
-    const {email, password} = req.body;
-    const newUser = await user.registration(email, password)
-    try{
+    try{    
+        const {email, password} = req.body;
+        const newUser = await user.registration(email, password)
         res.status(201).json(newUser)
     } catch(error){
         res.status(500).json({
@@ -30,7 +30,6 @@ export const loginUser = async (req, res, next) => {
 export const logoutUser = async (req, res, next) =>{
     try{
         const {refreshToken} = req.cookies;
-        console.log(req)
         const userData = await user.logout(refreshToken)
         res.clearCookie('refreshToken')
         res.json(userData)
@@ -39,4 +38,8 @@ export const logoutUser = async (req, res, next) =>{
             'message': error.message
         })
     }
+}
+
+export const refreshUser = async (req, res, next) =>{
+    
 }
