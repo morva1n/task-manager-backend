@@ -10,12 +10,14 @@ const findUserToken = async(userId) =>{
     return data.length > 0;
 }
 
-export const generateToken = async (payload) => {
+export const generateAccessToken = async (payload) => {
     const accessToken = jwt.sign(payload, process.env.JWT_KEY, {expiresIn: '30m'})
+    return accessToken;
+}
+
+export const generateRefreshToken = async (payload) => {
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_KEY, {expiresIn: '30d'})
-    return {
-        accessToken, refreshToken
-    }
+    return refreshToken;
 }
 
 export const assignToken = async(userId, refreshToken) =>{
@@ -30,3 +32,11 @@ export const assignToken = async(userId, refreshToken) =>{
 
     return data;
 };
+
+export const findRefreshToken = async(refreshToken) =>{
+    const {data, error} = await supabase.from('tokens').select('refreshToken').eq('refreshToken', refreshToken).single();
+    if(error){
+        return error;
+    }
+    return true;
+}

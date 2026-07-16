@@ -41,6 +41,16 @@ export const logoutUser = async (req, res, next) =>{
 }
 
 export const refreshUser = async (req, res, next) =>{
+    try{
+        const refreshToken = req.cookies.refreshToken;
+        const token = await user.refresh(refreshToken);
+        res.json(token)
+    }
+    catch(error){
+        res.json({
+            'message': error.message
+        })
+    }
 
 }
 

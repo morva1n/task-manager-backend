@@ -2,6 +2,10 @@ import { supabase } from "../supabaseClient.js"
 import bcrypt from 'bcrypt'
 import * as token from '../services/token.services.js'
 import cookieParser from "cookie-parser";
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const checkUserExists = async (email) => {
     const { data, error } = await supabase
@@ -42,10 +46,11 @@ export const login = async (email, password) => {
     if(!isPasswordValid){
         throw new Error('Invalid password!')
     }
-    const tokens = await token.generateToken({id: data.id, email: data.email})
+    const accessToken = await token.generateAccessToken({id: data.id, email: data.email})
+    const refreshToken = await token.generateRefreshToken({id: data.id, email: data.email})
 
-    const refresh = await token.assignToken(data.id, tokens.refreshToken)
-    return tokens;
+    const refresh = await token.assignToken(data.id, refreshToken)
+    return {accessToken, refreshToken};
 }
 
 
@@ -57,3 +62,16 @@ export const logout  = async (refreshToken) => {
     }
     return data;
 }
+
+export const refresh = async (refreshToken) =>{
+    const findRefreshToken = await token.findRefreshToken(refreshToken)
+    if(!findRefreshToken){
+        throw new Error('Bad!')
+    }
+    const data = jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY);
+
+    const accessToken = token.generateAccessToken({id: data.id, email: data.email})
+
+    return accessToken;
+}
+
