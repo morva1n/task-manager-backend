@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 
 import tasksRouter from './routes/tasks.routes.js';
 import userRouter from './routes/user.routes.js'
+import {errorMiddleware} from './middlewares/error.middlewares.js';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cookieParser())
 
 app.use('/tasks', tasksRouter)
 app.use('/user', userRouter)
+app.use(errorMiddleware)
 
 app.listen(process.env.PORT, () =>{
     console.log(`Server is running at ${process.env.PORT} port`)

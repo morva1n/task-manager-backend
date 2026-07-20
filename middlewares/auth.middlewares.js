@@ -1,22 +1,24 @@
 import jwt from 'jsonwebtoken'
-import dotenv from 'dotenv'
 
-dotenv.config()
-
-export const authMiddleware = async (req, res, next) =>{
+export const authMiddleware = (req, res, next) =>{
     const auth = req.headers.authorization;
     if(!auth){
-        throw new Error("Unauthorized!")
+        return next(new ErrorApp("Unauthorized!", 401)) 
     }
 
     const [type, accessToken] = auth.split(' ');
     
     if(type !== 'Bearer' || !accessToken){
-        throw new Error('Error bro!')
+        return next(new ErrorApp('Invalid or missing access token', 401))
     }
 
-    const userData = jwt.verify(accessToken, process.env.JWT_KEY);
-
-    req.user = userData
-    next()
+    try{
+        const userData = jwt.verify(accessToken, process.env.JWT_KEY);
+        req.user = userData
+        next()   
+    }
+    catch(error){
+        next(new ErrorApp('Invalid or expired access token.'), 401);
+    }
+    
 }

@@ -3,9 +3,8 @@ import bcrypt from 'bcrypt'
 import * as token from '../services/token.services.js'
 import cookieParser from "cookie-parser";
 import jwt from 'jsonwebtoken'
-import dotenv from 'dotenv'
+import { ErrorApp } from "../errors/ErrorApp.js";
 
-dotenv.config()
 
 const checkUserExists = async (email) => {
     const { data, error } = await supabase
@@ -22,7 +21,7 @@ const checkUserExists = async (email) => {
 
 export const registration = async (email, password) => {
     if(await checkUserExists(email)){
-        throw new Error(`User with email "${email}" already exists.`)
+        throw new ErrorApp(`User with email "${email}" already exists.`, 409)
     }
     const hashPassword = await bcrypt.hash(password, 10)
 
@@ -44,7 +43,7 @@ export const login = async (email, password) => {
     }
     const isPasswordValid = await bcrypt.compare(password, data.password)
     if(!isPasswordValid){
-        throw new Error('Invalid password!')
+        throw new ErrorApp('Invalid password!', 401)
     }
     const accessToken = await token.generateAccessToken({id: data.id, email: data.email})
     const refreshToken = await token.generateRefreshToken({id: data.id, email: data.email})

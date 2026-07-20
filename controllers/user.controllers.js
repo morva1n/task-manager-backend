@@ -21,9 +21,7 @@ export const loginUser = async (req, res, next) => {
         res.cookie('refreshToken', userData.refreshToken, {maxAge: 30*24*60*60*1000, httpOnly: true})
         res.status(200).json(userData) 
     }catch(error){
-        res.status(401).json({
-            'message': error.message
-        })
+        next(error)
     }
 }
 
@@ -47,9 +45,7 @@ export const refreshUser = async (req, res, next) =>{
         res.json(token)
     }
     catch(error){
-        res.json({
-            'message': error.message
-        })
+        next(error)
     }
 
 }

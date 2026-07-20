@@ -1,8 +1,5 @@
 import jwt from 'jsonwebtoken'
-import dotenv from 'dotenv'
 import { supabase } from '../supabaseClient.js'
-
-dotenv.config()
 
 const findUserToken = async(userId) =>{
     const {data, error} = await supabase.from('tokens').select('*').eq('userId', userId);
