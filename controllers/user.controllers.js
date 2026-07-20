@@ -1,6 +1,5 @@
-import { supabase } from "../supabaseClient.js";
 import * as user from '../services/user.services.js'
-import cookieParser from "cookie-parser";
+
 
 export const registrationUser = async (req, res, next) =>{
     try{    
@@ -8,9 +7,7 @@ export const registrationUser = async (req, res, next) =>{
         const newUser = await user.registration(email, password)
         res.status(201).json(newUser)
     } catch(error){
-        res.status(500).json({
-            'message': error.message
-        })
+        next(error)
     }
 }
 
@@ -32,9 +29,7 @@ export const logoutUser = async (req, res, next) =>{
         res.clearCookie('refreshToken')
         res.json(userData)
     } catch(error){
-        res.json({
-            'message': error.message
-        })
+        next(error)
     }
 }
 

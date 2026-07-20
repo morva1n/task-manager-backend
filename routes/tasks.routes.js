@@ -5,10 +5,10 @@ import { authMiddleware } from "../middlewares/auth.middlewares.js";
 const router = express.Router();
 
 
-router.get("/", authMiddleware,  tasks.getTasks);
-router.post("/", authMiddleware, tasks.createTask)
-router.patch("/:id", authMiddleware, tasks.changeTask)
-router.patch("/:id/complete", authMiddleware, tasks.completeTask)
-router.delete("/:id", authMiddleware, tasks.deleteTask)
+router.get("/", authMiddleware,  tasks.listTasks);
+router.post("/", authMiddleware, tasks.addTask)
+router.patch("/:id", authMiddleware, tasks.updateTask)
+router.patch("/:id/complete", authMiddleware, tasks.markTaskAsComplete)
+router.delete("/:id", authMiddleware, tasks.removeTask)
 
 export default router;

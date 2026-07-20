@@ -1,82 +1,69 @@
 import { supabase } from "../supabaseClient.js";
 import * as tasks from '../services/tasks.services.js'
 
-export const getTasks = async (req, res) =>{
-    const userId = req.user.id;
-    const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq('userId', userId);
-    if (error) {
-        return res.status(500).json(error);
+export const listTasks = async (req, res, next) =>{
+    try{
+        const userId = req.user.id;
+        const getTasks = await tasks.getTasks(userId);
+        res.status(200).json(getTasks);
     }
-
-    res.json(data);
+    catch(error){
+        next(error)
+    }
 }
 
-export const createTask = async (req, res) =>{
-    const userId = req.user.id;
-    const {name, description} = req.body;
-
-    const {data, error} = await supabase
-        .from("tasks")
-        .insert({name, description, userId})
-        .select()
+export const addTask = async (req, res, next) =>{
+    try{
+        const userId = req.user.id;
+        const {name, description} = req.body;
+        const createTask = await tasks.createTask(name, description, userId);
+        res.status(200).json(createTask)    
+    }
+    catch(error){
+        next(error)
+    }
     
-    if(error){
-        return res.status(500).json(error)
+}
+
+export const updateTask = async(req, res, next) =>{
+    try{
+        const userId = req.user.id;
+        const {id} = req.params;
+        const {name, description} = req.body;
+        const changeTask = await tasks.changeTask(userId, id, name, description)
+        res.status(200).json(changeTask)   
     }
-
-    res.json(data)
-}
-
-export const changeTask = async(req, res) =>{
-    const userId = req.user.id;
-    const {id} = req.params;
-    const {name, description} = req.body;
-    const updateTask = await tasks.checkData(name, description)
-    const {data, error} = await supabase
-        .from("tasks")
-        .update(updateTask)
-        .eq("id", Number(id))
-        .eq("userId", userId)
-        .select("*")
-
-    if(error){
-        return res.status(500).json(error)
+    catch(error){
+        next(error)
     }
-
-    res.json(data)
-}
-
-export const completeTask = async(req, res) =>{
-    const userId = req.user.id;
-    const {id} = req.params;
-    const {finished} = req.body;
-
-    const{data, error} = await supabase
-        .from("tasks")
-        .update({finished})
-        .eq("id", Number(id))
-        .eq("userId", userId)
-        .select("*")
-    res.json(data)
-}
-
-export const deleteTask = async(req, res) =>{
-    const userId = req.user.id;
-    const {id} = req.params;
-
-    const{data, error} = await supabase
-        .from("tasks")
-        .delete()
-        .eq("id", Number(id))
-        .eq("userId", userId)
-        .select("*")
     
-    if(error){
-        return res.status(500).json(error)
-    }
+    
+}
 
-    res.json(data)
+export const markTaskAsComplete = async(req, res, next) =>{
+    try{
+        const userId = req.user.id;
+        const {id} = req.params;
+        const {finished} = req.body;
+
+        const completeTask = await tasks.completeTask(userId, id, finished)
+        res.status(200).json(completeTask)
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+export const removeTask = async(req, res, next) =>{
+    try{
+        const userId = req.user.id;
+        const {id} = req.params;
+
+        const deleteTask = await tasks.deleteTask(userId, id);
+
+        res.status(200).json(deleteTask)
+    }
+    catch(error){
+        next(error)
+    }
 }
