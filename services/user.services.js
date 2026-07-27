@@ -1,7 +1,6 @@
 import { supabase } from "../supabaseClient.js"
 import bcrypt from 'bcrypt'
 import * as token from '../services/token.services.js'
-import cookieParser from "cookie-parser";
 import jwt from 'jsonwebtoken'
 import { ErrorApp } from "../errors/ErrorApp.js";
 

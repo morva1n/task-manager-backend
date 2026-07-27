@@ -4,8 +4,11 @@ const routes = express.Router();
 
 import * as user from '../controllers/user.controllers.js'
 
-routes.post('/registration', user.registrationUser)
-routes.post('/login', user.loginUser)
+import { validationMiddleware } from '../middlewares/validation.middlewares.js';
+import { authSchema } from '../validation/auth.schema.js';
+
+routes.post('/registration', validationMiddleware(authSchema), user.registrationUser)
+routes.post('/login', validationMiddleware(authSchema), user.loginUser)
 routes.post('/logout', user.logoutUser)
 routes.post('/refresh', user.refreshUser)
 

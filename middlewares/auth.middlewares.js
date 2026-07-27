@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { ErrorApp } from '../errors/ErrorApp.js';
 
 export const authMiddleware = (req, res, next) =>{
     const auth = req.headers.authorization;
@@ -9,7 +10,7 @@ export const authMiddleware = (req, res, next) =>{
     const [type, accessToken] = auth.split(' ');
     
     if(type !== 'Bearer' || !accessToken){
-        return next(new ErrorApp('Invalid or missing access token', 401))
+        return next(new ErrorApp('Invalid or missing access token', 500))
     }
 
     try{
@@ -18,7 +19,7 @@ export const authMiddleware = (req, res, next) =>{
         next()   
     }
     catch(error){
-        next(new ErrorApp('Invalid or expired access token.'), 401);
+        next(new ErrorApp('Invalid or expired access token.'), 500);
     }
     
 }
