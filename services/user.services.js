@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient.js"
+import { supabase } from "../db/supabaseClient.js"
 import bcrypt from 'bcrypt'
 import * as token from '../services/token.services.js'
 import jwt from 'jsonwebtoken'

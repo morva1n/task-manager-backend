@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { supabase } from '../supabaseClient.js'
+import { supabase } from '../db/supabaseClient.js'
 import { ErrorApp } from '../errors/ErrorApp.js';
 
 const findUserToken = async(userId) =>{

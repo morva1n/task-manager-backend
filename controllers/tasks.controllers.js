@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../db/supabaseClient.js";
 import * as tasks from '../services/tasks.services.js'
 
 export const listTasks = async (req, res, next) =>{

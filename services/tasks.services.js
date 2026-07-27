@@ -1,5 +1,5 @@
 import { ErrorApp } from "../errors/ErrorApp.js"
-import { supabase } from "../supabaseClient.js"
+import { supabase } from "../db/supabaseClient.js";
 
 export const checkData =  async(name, description) =>{
     const updateTask = {}
