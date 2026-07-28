@@ -26,21 +26,21 @@ export const createTask = async(name, description, userId) =>{
 
 export const changeTask = async(userId, id, name, description) =>{
     const updateTask = await checkData(name, description)
-    const {data, error} = await supabase.from("tasks").update(updateTask).eq("id", Number(id)).eq("userId", userId).select("*")
+    const {data, error} = await supabase.from("tasks").update(updateTask).eq("id", Number(id)).eq("userId", userId).select("*").single()
     if(error) throw new ErrorApp('Failed to change task.', 500)
 
     return data;
 }
 
 export const completeTask = async(userId, id, finished) =>{
-    const{data, error} = await supabase.from("tasks").update({finished}).eq("id", Number(id)).eq("userId", userId).select("*")
+    const{data, error} = await supabase.from("tasks").update({finished}).eq("id", Number(id)).eq("userId", userId).select("*").single()
     if(error) throw new ErrorApp('Failed to complete task.', 500)
 
     return data;
 }
 
 export const deleteTask = async(userId, id) =>{
-    const{data, error} = await supabase.from("tasks").delete().eq("id", Number(id)).eq("userId", userId).select("*")
+    const{data, error} = await supabase.from("tasks").delete().eq("id", Number(id)).eq("userId", userId).select('*').single()
     if(error) throw new ErrorApp('Failed to delete task.', 500)
 
     return data;
