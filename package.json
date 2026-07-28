@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "nodemon index.js"
   },
-  "author": "morva1n",
-  "license": "ISC",
+  "author": "Morva1n",
+  "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "bcrypt": "^6.0.0",
