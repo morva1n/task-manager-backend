@@ -61,7 +61,7 @@ export const removeTask = async(req, res, next) =>{
 
         const deleteTask = await tasks.deleteTask(userId, id);
 
-        res.status(200).json({message: 'Task deleted!'})
+        res.status(200).json({message: 'Task deleted successfully.'})
     }
     catch(error){
         next(error)

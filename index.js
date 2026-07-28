@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(cookieParser())
 
 app.use('/tasks', tasksRouter)
-app.use('/user', userRouter)
+app.use('/', userRouter)
 app.use(errorMiddleware)
 
 app.listen(process.env.PORT, () =>{

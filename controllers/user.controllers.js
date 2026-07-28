@@ -27,7 +27,7 @@ export const logoutUser = async (req, res, next) =>{
         const {refreshToken} = req.cookies;
         const userData = await user.logout(refreshToken)
         res.clearCookie('refreshToken')
-        res.json(userData)
+        res.json({message: "User logged out successfully."})
     } catch(error){
         next(error)
     }
