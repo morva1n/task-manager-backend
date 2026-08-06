@@ -23,6 +23,8 @@ PASSWORD="Password123!"
 PASS=0
 FAIL=0
 
+mkdir -p ../.qa-tmp
+
 # Extract a top-level field from a JSON file. Usage: json_get <file> <field>
 json_get() {
   local file="$1"
@@ -85,23 +87,23 @@ echo "1. AUTH MIDDLEWARE - error status codes"
 echo "=============================================="
 
 echo "-- No Authorization header"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" "$BASE_URL/tasks")
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" "$BASE_URL/tasks")
 check_status "No auth header returns 401" "401" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 echo "-- Invalid/garbage token"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" \
   -H "Authorization: Bearer garbage.invalid.token" \
   "$BASE_URL/tasks")
 check_status "Invalid token returns 401" "401" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 echo "-- Malformed auth scheme (Basic instead of Bearer)"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" \
   -H "Authorization: Basic sometoken" \
   "$BASE_URL/tasks")
 check_status "Malformed scheme returns 401" "401" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 
 echo "=============================================="
@@ -111,27 +113,27 @@ echo "=============================================="
 echo "-- Register User A"
 curl -s -X POST "$BASE_URL/registration" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$USER_A_EMAIL\",\"password\":\"$PASSWORD\"}" | tee /tmp/reg_a.json
+  -d "{\"email\":\"$USER_A_EMAIL\",\"password\":\"$PASSWORD\"}" | tee ../.qa-tmp/reg_a.json
 echo
 
 echo "-- Register User B"
 curl -s -X POST "$BASE_URL/registration" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$USER_B_EMAIL\",\"password\":\"$PASSWORD\"}" | tee /tmp/reg_b.json
+  -d "{\"email\":\"$USER_B_EMAIL\",\"password\":\"$PASSWORD\"}" | tee ../.qa-tmp/reg_b.json
 echo
 
 echo "-- Login User A"
 curl -s -X POST "$BASE_URL/login" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$USER_A_EMAIL\",\"password\":\"$PASSWORD\"}" > /tmp/login_a.json
-TOKEN_A=$(json_get /tmp/login_a.json accessToken)
+  -d "{\"email\":\"$USER_A_EMAIL\",\"password\":\"$PASSWORD\"}" > ../.qa-tmp/login_a.json
+TOKEN_A=$(json_get ../.qa-tmp/login_a.json accessToken)
 echo "  Got TOKEN_A: ${TOKEN_A:0:20}..."
 
 echo "-- Login User B"
 curl -s -X POST "$BASE_URL/login" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$USER_B_EMAIL\",\"password\":\"$PASSWORD\"}" > /tmp/login_b.json
-TOKEN_B=$(json_get /tmp/login_b.json accessToken)
+  -d "{\"email\":\"$USER_B_EMAIL\",\"password\":\"$PASSWORD\"}" > ../.qa-tmp/login_b.json
+TOKEN_B=$(json_get ../.qa-tmp/login_b.json accessToken)
 echo "  Got TOKEN_B: ${TOKEN_B:0:20}..."
 
 if [ -z "$TOKEN_A" ] || [ -z "$TOKEN_B" ]; then
@@ -146,12 +148,12 @@ echo "3. TASK VALIDATION (Zod)"
 echo "=============================================="
 
 echo "-- Create task with missing 'name' field (should fail validation)"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X POST "$BASE_URL/tasks" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" -X POST "$BASE_URL/tasks" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN_A" \
   -d '{"description":"missing name field"}')
 check_status "Missing name returns 400" "400" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 
 echo "=============================================="
@@ -162,9 +164,9 @@ echo "-- Create a task as User A"
 curl -s -X POST "$BASE_URL/tasks" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -d '{"name":"User A private task","description":"IDOR regression test"}' > /tmp/task_created.json
-cat /tmp/task_created.json
-TASK_ID=$(json_get_array_id /tmp/task_created.json)
+  -d '{"name":"User A private task","description":"IDOR regression test"}' > ../.qa-tmp/task_created.json
+cat ../.qa-tmp/task_created.json
+TASK_ID=$(json_get_array_id ../.qa-tmp/task_created.json)
 echo "  Created task ID: $TASK_ID"
 
 if [ -z "$TASK_ID" ]; then
@@ -174,33 +176,33 @@ if [ -z "$TASK_ID" ]; then
 fi
 
 echo "-- User B attempts to UPDATE User A's task"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X PATCH "$BASE_URL/tasks/$TASK_ID" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" -X PATCH "$BASE_URL/tasks/$TASK_ID" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN_B" \
   -d '{"name":"Hijacked by User B","description":"should not be allowed"}')
 check_status "Cross-user update is blocked (non-2xx)" "500" "$STATUS"
 echo "  (NOTE: expected long-term is 403/404, currently returns 500 - see QA report)"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 echo "-- User B attempts to COMPLETE User A's task"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X PATCH "$BASE_URL/tasks/$TASK_ID/complete" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" -X PATCH "$BASE_URL/tasks/$TASK_ID/complete" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN_B" \
   -d '{"finished":true}')
 check_status "Cross-user complete is blocked (non-2xx)" "500" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 echo "-- User B attempts to DELETE User A's task"
-STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X DELETE "$BASE_URL/tasks/$TASK_ID" \
+STATUS=$(curl -s -o ../.qa-tmp/resp.json -w "%{http_code}" -X DELETE "$BASE_URL/tasks/$TASK_ID" \
   -H "Authorization: Bearer $TOKEN_B")
 check_status "Cross-user delete is blocked (non-2xx)" "500" "$STATUS"
-cat /tmp/resp.json; echo
+cat ../.qa-tmp/resp.json; echo
 
 echo "-- Verify User A's task is unchanged after all 3 attempts"
 curl -s -X GET "$BASE_URL/tasks" \
-  -H "Authorization: Bearer $TOKEN_A" > /tmp/verify.json
-cat /tmp/verify.json
-UNCHANGED_NAME=$(json_find_task_name /tmp/verify.json "$TASK_ID")
+  -H "Authorization: Bearer $TOKEN_A" > ../.qa-tmp/verify.json
+cat ../.qa-tmp/verify.json
+UNCHANGED_NAME=$(json_find_task_name ../.qa-tmp/verify.json "$TASK_ID")
 if [ "$UNCHANGED_NAME" == "User A private task" ]; then
   echo "  PASS - Task name unchanged after IDOR attempts"
   PASS=$((PASS+1))
