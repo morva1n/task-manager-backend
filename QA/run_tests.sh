@@ -8,7 +8,9 @@
 #   ./run_tests.sh
 #
 # Notes:
-# - Requires curl and jq (https://stedolan.github.io/jq/) for parsing responses.
+# - Requires curl and node (no jq dependency - JSON parsing is done via small
+#   inline Node scripts instead, since jq isn't always available/permitted
+#   on every machine).
 # - Uses two disposable test users. Re-running registers the same emails again,
 #   which will correctly fail with 409 Conflict on the second run - that's expected,
 #   the script still proceeds to login.
@@ -20,6 +22,50 @@ PASSWORD="Password123!"
 
 PASS=0
 FAIL=0
+
+# Extract a top-level field from a JSON file. Usage: json_get <file> <field>
+json_get() {
+  local file="$1"
+  local field="$2"
+  node -e "
+    try {
+      const data = JSON.parse(require('fs').readFileSync('$file', 'utf8'));
+      const val = data['$field'];
+      console.log(val === undefined ? '' : val);
+    } catch (e) {
+      console.log('');
+    }
+  "
+}
+
+# Extract the id of the first item in a JSON array response. Usage: json_get_array_id <file>
+json_get_array_id() {
+  local file="$1"
+  node -e "
+    try {
+      const data = JSON.parse(require('fs').readFileSync('$file', 'utf8'));
+      const item = Array.isArray(data) ? data[0] : data;
+      console.log(item && item.id !== undefined ? item.id : '');
+    } catch (e) {
+      console.log('');
+    }
+  "
+}
+
+# Find a task by id in a JSON array response and print its 'name'. Usage: json_find_task_name <file> <id>
+json_find_task_name() {
+  local file="$1"
+  local id="$2"
+  node -e "
+    try {
+      const data = JSON.parse(require('fs').readFileSync('$file', 'utf8'));
+      const task = (Array.isArray(data) ? data : []).find(t => String(t.id) === '$id');
+      console.log(task ? task.name : '');
+    } catch (e) {
+      console.log('');
+    }
+  "
+}
 
 check_status() {
   local description="$1"
@@ -78,17 +124,17 @@ echo "-- Login User A"
 curl -s -X POST "$BASE_URL/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$USER_A_EMAIL\",\"password\":\"$PASSWORD\"}" > /tmp/login_a.json
-TOKEN_A=$(jq -r '.accessToken' /tmp/login_a.json)
+TOKEN_A=$(json_get /tmp/login_a.json accessToken)
 echo "  Got TOKEN_A: ${TOKEN_A:0:20}..."
 
 echo "-- Login User B"
 curl -s -X POST "$BASE_URL/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$USER_B_EMAIL\",\"password\":\"$PASSWORD\"}" > /tmp/login_b.json
-TOKEN_B=$(jq -r '.accessToken' /tmp/login_b.json)
+TOKEN_B=$(json_get /tmp/login_b.json accessToken)
 echo "  Got TOKEN_B: ${TOKEN_B:0:20}..."
 
-if [ "$TOKEN_A" == "null" ] || [ "$TOKEN_B" == "null" ]; then
+if [ -z "$TOKEN_A" ] || [ -z "$TOKEN_B" ]; then
   echo "ERROR: could not obtain access tokens, aborting IDOR tests."
   echo "Passed: $PASS  Failed: $FAIL"
   exit 1
@@ -118,10 +164,10 @@ curl -s -X POST "$BASE_URL/tasks" \
   -H "Authorization: Bearer $TOKEN_A" \
   -d '{"name":"User A private task","description":"IDOR regression test"}' > /tmp/task_created.json
 cat /tmp/task_created.json
-TASK_ID=$(jq -r '.[0].id' /tmp/task_created.json)
+TASK_ID=$(json_get_array_id /tmp/task_created.json)
 echo "  Created task ID: $TASK_ID"
 
-if [ "$TASK_ID" == "null" ] || [ -z "$TASK_ID" ]; then
+if [ -z "$TASK_ID" ]; then
   echo "ERROR: could not create test task, aborting IDOR checks."
   echo "Passed: $PASS  Failed: $FAIL"
   exit 1
@@ -154,7 +200,7 @@ echo "-- Verify User A's task is unchanged after all 3 attempts"
 curl -s -X GET "$BASE_URL/tasks" \
   -H "Authorization: Bearer $TOKEN_A" > /tmp/verify.json
 cat /tmp/verify.json
-UNCHANGED_NAME=$(jq -r ".[] | select(.id==$TASK_ID) | .name" /tmp/verify.json)
+UNCHANGED_NAME=$(json_find_task_name /tmp/verify.json "$TASK_ID")
 if [ "$UNCHANGED_NAME" == "User A private task" ]; then
   echo "  PASS - Task name unchanged after IDOR attempts"
   PASS=$((PASS+1))
